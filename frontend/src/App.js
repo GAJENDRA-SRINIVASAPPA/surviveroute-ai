@@ -12,22 +12,30 @@ import AIAssistant from './components/AIAssistant';
 import Login from './components/Login';
 import Register from './components/Register';
 import Navbar from './components/Navbar';
+import Onboarding from './components/Onboarding';
 
 function App() {
   const [user, setUser] = useState(null);
   const [vehicle, setVehicle] = useState(null);
   const [fuelLevel, setFuelLevel] = useState(50);
   const [prediction, setPrediction] = useState(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Load saved data from localStorage
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
     const savedVehicle = localStorage.getItem('vehicle');
     const savedFuelLevel = localStorage.getItem('fuelLevel');
+    const onboardingComplete = localStorage.getItem('onboardingComplete');
 
     if (savedUser) setUser(JSON.parse(savedUser));
     if (savedVehicle) setVehicle(JSON.parse(savedVehicle));
     if (savedFuelLevel) setFuelLevel(parseFloat(savedFuelLevel));
+    
+    // Show onboarding for first-time users
+    if (!onboardingComplete && savedUser) {
+      setShowOnboarding(true);
+    }
   }, []);
 
   // Save data to localStorage
@@ -39,6 +47,11 @@ function App() {
 
   const handleLogin = (userData) => {
     setUser(userData);
+    // Show onboarding for new users
+    const onboardingComplete = localStorage.getItem('onboardingComplete');
+    if (!onboardingComplete) {
+      setShowOnboarding(true);
+    }
   };
 
   const handleLogout = () => {
@@ -55,9 +68,16 @@ function App() {
     setFuelLevel(newFuelLevel);
   };
 
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
+  };
+
   return (
     <Router>
       <div className="App">
+        {/* Show onboarding for first-time users */}
+        {showOnboarding && <Onboarding onComplete={handleOnboardingComplete} />}
+        
         {user && <Navbar user={user} onLogout={handleLogout} />}
         
         <Routes>

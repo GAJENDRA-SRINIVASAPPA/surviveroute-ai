@@ -6,7 +6,7 @@ const compression = require('compression');
 const morgan = require('morgan');
 
 // Import middleware
-const errorMiddleware = require('./src/middleware/error.middleware');
+const { errorHandler } = require('./src/middleware/error.middleware');
 const logger = require('./src/utils/logger');
 
 // Import routes
@@ -93,7 +93,7 @@ app.use((req, res) => {
 });
 
 // Error handling middleware (must be last)
-app.use(errorMiddleware);
+app.use(errorHandler);
 
 // Start server
 const PORT = process.env.PORT || 5000;

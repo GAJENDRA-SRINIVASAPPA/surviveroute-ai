@@ -1,69 +1,68 @@
 #!/bin/bash
 
-# SurviveRoute AI - Startup Script
-# This script starts the complete application stack
-
-set -e
+# SurviveRoute AI - Start Script
+# Starts both backend and frontend servers
 
 echo "🚀 Starting SurviveRoute AI..."
 echo ""
 
-# Colors for output
+# Colors
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-# Check if Docker is installed
-if ! command -v docker &> /dev/null; then
-    echo -e "${YELLOW}⚠️  Docker is not installed. Please install Docker first.${NC}"
-    echo "Visit: https://docs.docker.com/get-docker/"
+# Check if dependencies are installed
+if [ ! -d "backend/node_modules" ]; then
+    echo -e "${YELLOW}⚠️  Backend dependencies not installed${NC}"
+    echo "Run ./setup.sh first"
     exit 1
 fi
 
-# Check if Docker Compose is installed
-if ! command -v docker-compose &> /dev/null; then
-    echo -e "${YELLOW}⚠️  Docker Compose is not installed. Please install Docker Compose first.${NC}"
-    echo "Visit: https://docs.docker.com/compose/install/"
+if [ ! -d "frontend/node_modules" ]; then
+    echo -e "${YELLOW}⚠️  Frontend dependencies not installed${NC}"
+    echo "Run ./setup.sh first"
     exit 1
 fi
 
-# Check if .env file exists
-if [ ! -f "backend/.env" ]; then
-    echo -e "${YELLOW}⚠️  Environment file not found. Creating from template...${NC}"
-    cp backend/.env.example backend/.env
-    echo -e "${GREEN}✅ Created backend/.env file${NC}"
-    echo -e "${YELLOW}⚠️  Please edit backend/.env with your configuration before continuing.${NC}"
+# Function to cleanup on exit
+cleanup() {
     echo ""
-    read -p "Press Enter to continue after editing .env file..."
-fi
+    echo -e "${YELLOW}Shutting down servers...${NC}"
+    kill $BACKEND_PID $FRONTEND_PID 2>/dev/null
+    exit 0
+}
 
-echo -e "${BLUE}📦 Building Docker images...${NC}"
-docker-compose build
+trap cleanup SIGINT SIGTERM
+
+# Start backend
+echo -e "${BLUE}Starting backend server on port 5001...${NC}"
+cd backend
+PORT=5001 node server.js &
+BACKEND_PID=$!
+cd ..
+
+# Wait a bit for backend to start
+sleep 3
+
+# Start frontend
+echo -e "${BLUE}Starting frontend server on port 3000...${NC}"
+cd frontend
+npm start &
+FRONTEND_PID=$!
+cd ..
 
 echo ""
-echo -e "${BLUE}🚀 Starting services...${NC}"
-docker-compose up -d
+echo -e "${GREEN}✅ Servers started!${NC}"
+echo ""
+echo -e "${YELLOW}Access the application at:${NC}"
+echo "  Frontend: http://localhost:3000"
+echo "  Backend:  http://localhost:5001"
+echo ""
+echo -e "${YELLOW}Press Ctrl+C to stop both servers${NC}"
+echo ""
 
-echo ""
-echo -e "${GREEN}✅ Services started successfully!${NC}"
-echo ""
-echo "📊 Service Status:"
-docker-compose ps
-
-echo ""
-echo -e "${GREEN}🌐 Application URLs:${NC}"
-echo -e "  Frontend: ${BLUE}http://localhost:3000${NC}"
-echo -e "  Backend:  ${BLUE}http://localhost:5000${NC}"
-echo -e "  API Docs: ${BLUE}http://localhost:5000/api/health${NC}"
-echo ""
-echo -e "${GREEN}📝 Useful Commands:${NC}"
-echo "  View logs:        docker-compose logs -f"
-echo "  Stop services:    docker-compose down"
-echo "  Restart services: docker-compose restart"
-echo "  View status:      docker-compose ps"
-echo ""
-echo -e "${GREEN}🎉 SurviveRoute AI is now running!${NC}"
-echo ""
+# Wait for processes
+wait $BACKEND_PID $FRONTEND_PID
 
 # Made with Bob

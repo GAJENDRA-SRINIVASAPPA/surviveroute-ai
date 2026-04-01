@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 
 function Dashboard({ vehicle, fuelLevel, onFuelUpdate, prediction, setPrediction }) {
@@ -62,9 +63,9 @@ function Dashboard({ vehicle, fuelLevel, onFuelUpdate, prediction, setPrediction
           <p style={{ marginBottom: '1rem' }}>
             Please set up your vehicle first to start using the app.
           </p>
-          <a href="/vehicle-setup" className="btn btn-primary">
+          <Link to="/vehicle-setup" className="btn btn-primary">
             Set Up Vehicle
-          </a>
+          </Link>
         </div>
       </div>
     );
